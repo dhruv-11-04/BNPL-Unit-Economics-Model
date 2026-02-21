@@ -55,7 +55,7 @@ The model is built using the 2024 US BNPL statistics from:
 Contribution Margin (CM) remains positive only within a **specific ticket size band**, which varies by user segment.
 
 [
-CM(T) = T \cdot MDR - CostOfFunds(T) - PD(T)\cdot LGD \cdot T - FixedCost
+CM(T) = TxMDR - CostOfFunds(T) - PD(T)xLGDxT - FixedCost
 ]
 
 Where:
