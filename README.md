@@ -1,33 +1,226 @@
 # BNPL Unit Economics & Profitability Risk Model
-Financial model simulating BNPL portfolio performance across credit tiers, ticket sizes, default rates, Merchant Discount Rate, and funding assumptions.
+
+A segment-level financial model analyzing the structural sustainability of Buy Now Pay Later (BNPL) unit economics under varying ticket sizes, credit tiers, demographic mix, funding costs, and Merchant Discount Rates (MDR).
+
+This project evaluates whether BNPL profitability is structurally sustainable — and if so, under what portfolio composition.
 
 ---
 
-## Overview
-This project models the **unit economics, credit risk dynamics, and portfolio-level profitability** of a Buy Now Pay Later (BNPL) Pay-in-4 provider using 2024–2025 industry benchmarks.
+## Objective
 
-The objective is to evaluate:
-* Whether BNPL margins are structurally sustainable
-* How profitability varies across user segments
-* The viable ticket size range for different risk profiles
-* The trade-off between merchant GMV lift and BNPL profitability
+To model how:
+* Ticket size elasticity
+* Credit risk concentration
+* Demographic mix
+* Funding cost sensitivity
+* Merchant pricing pressure
 
-This model integrates **credit segmentation, demographic distribution, expected credit loss modeling, and dynamic contribution margin analysis** into an interactive dashboard.
+interact to determine BNPL contribution margin at both segment and portfolio levels.
+
+The model identifies profitability breakpoints, optimal ticket sizes, and structural fragility thresholds.
 
 ---
 
-## Industry Context
-BNPL providers offer short-duration installment credit (typically 4 installments over 6 weeks) at 0% interest to consumers and monetize primarily through Merchant Discount Rates (MDR).
+## Core Hypothesis
 
-### Structural Industry Characteristics
-* High merchant bargaining power → MDR compression
-* Capital dependence → Cost of funds sensitivity
-* Credit risk concentration in specific segments
-* Thin margins amplified by portfolio mix volatility
+BNPL contribution margin is not monotonic in ticket size.
+
+Revenue scales linearly with ticket size:
+```
+R(T) = T × MDR
+```
+
+But expected credit loss scales non-linearly:
+```
+PD(T) = PD_base × (T / T_baseline)^β
+```
+
+Therefore:
+```
+CM(T) = T × MDR − FundingCost(T) − PD(T) × LGD × T − FixedCost
+```
+
+This produces segment-specific profitability bands:
+* Minimum viable ticket size
+* Peak contribution margin
+* Maximum viable ticket size
+
+Beyond a threshold, convex credit losses dominate linear revenue growth.
+
+---
+
+## Segmentation Framework
+
+The portfolio is modeled across **60 user profiles**:
+
+**4 Generations × 3 Income Brackets × 5 Credit Tiers**
+
+Each segment includes:
+* Baseline probability of default
+* Average ticket size
+* Beta coefficient (risk elasticity)
+* Expected credit loss
+* Segment-level contribution margin
+
+This enables both:
+* Micro (user-level) economics
+* Macro (portfolio-level) aggregation
+
+---
+
+## Core Financial Assumptions
+
+| Variable | Value |
+|----------|-------|
+| Merchant Discount Rate (MDR) | 5% |
+| Funding Rate | 9.5% |
+| Loss Given Default (LGD) | 75% |
+| Fixed Cost per Loan | $3 |
+| Loan Tenure | 6 weeks |
+
+MDR and Funding Rate are adjustable within the dashboard.
+
+---
+
+## Key Findings
+
+### 1. Structural Fragility
+
+* Portfolio contribution margin: **$0.80 per loan**
+* CM implies that ~98% of revenue is absorbed by funding, credit losses, and operating costs.
+* ±50bps shock (funding up + MDR down) turns portfolio CM negative
+* The industry operates with thin buffers and high macro sensitivity.
+
+High merchant bargaining power and capital dependence structurally compress margins.
+
+### 2. The Profitability Paradox
+
+* **35% of loans profitable**
+* **65% of loans loss-making**
+
+The loss-making majority likely drives incremental merchant GMV, justifying MDR levels.
+
+The profitable minority preserves BNPL viability but may generate less incremental merchant value.
+
+This creates structural cross-subsidization within the portfolio.
+
+**BNPL's sustainability depends on balancing these opposing forces.**
+
+### 3. Non-Linear Risk Drives Breakpoints
+
+Beta coefficients range from **1.05 (Super Prime) to 1.89 (Deep Subprime)**.
+Beta coefficients for Income Brackets range from **1.05 (>100k) to 1.4 (<50k)**.
+
+High-risk segments (β = 1.89) see defaults grow **18x** at 4x ticket size
+* Low-risk segments (β = 1.05) remain stable even at 5x+ ticket size
+* **This non-linearity drives segment-specific breakeven points**
+
+### 4. Segment-Specific Profitability Windows
+
+| Segment | Min ATS | Optimal ATS | Max ATS |
+|---------|---------|-------------|---------|
+| Gen Z, <$50k, Deep Subprime | Never profitable | N/A | N/A |
+| Millennial, $50–100k, Near Prime | $114 | $294 | $457 |
+| Gen X, >$100k, Prime | $148 | $2,068 | $4,062 |
+
+Millennial Near Prime shows a **160%+ gap between average and optimal ticket size** — indicating controlled underwriting expansion potential.
+
+### 5. Concentration Risk
+
+* **45% of originations originate from Deep Subprime**
+* Structurally unprofitable across ticket sizes
+* Portfolio viability is highly sensitive to mix shifts.
+
+A deterioration in low-income concentration beyond **~23%** renders the portfolio unprofitable.
+
+**Portfolio mix is the primary strategic lever.**
+
+### 6. Industry-Level Tension
+
+BNPL operates in a structurally fragile equilibrium:
+
+**Merchant Value Drivers ≠ BNPL Profit Drivers**
+
+* Riskier segments drive merchant GMV uplift but compress BNPL margins
+* Stable segments generate BNPL profit but may add less incremental merchant value
+
+Competitive MDR compression and funding cost volatility amplify this tension.
+
+### 7. Portfolio Mix is the Primary Control Variable
+
+While ticket size optimization improves segment economics, long-term sustainability is primarily driven by demographic and credit mix composition.
+
+**Growth quality matters more than growth volume**.
+
+---
+
+## Strategic Implications
+
+The model suggests sustainability requires:
+
+* Gradual expansion of Near Prime segments
+* Controlled reduction in Deep Subprime concentration
+* Segment-specific ticket optimization
+* Revenue diversification beyond MDR-only monetization
+
+**BNPL is not structurally doomed — but is highly sensitive to pricing, mix, and funding conditions.**
+
+---
+
+## Model Features
+
+### Interactive Dashboard:
+* Dynamic segment selection
+* Real-time CM vs ticket size visualization
+* Automatic detection of min/peak/max profitable ATS
+* Adjustable MDR and funding rate stress testing
+* Portfolio-level aggregation metrics
+
+### Analytical Engine:
+* 60-segment economic model
+* Non-linear PD elasticity
+* Portfolio-weighted aggregation
+* Stress threshold detection
+
+---
+
+## What This Project Demonstrates
+
+* Unit economics modeling
+* Credit risk convexity analysis
+* Portfolio concentration risk assessment
+* Scenario-based stress testing
+* Translation of micro-level risk into macro-level strategic implications
+* Advanced Excel financial modeling architecture
+
+---
+
+## Dashboard Preview
+
+<img width="958" height="686" alt="Screenshot 2026-02-21 at 8 48 00 PM" src="https://github.com/user-attachments/assets/61b15216-03d4-4726-8629-8fd42ab26fbd" />
+
+---
+
+## Future Enhancements
+
+* Merchant GMV lift quantification
+* Monte Carlo stress simulation
+* Multi-tenure product modeling
+* Python-based scenario automation
+* Real-world dataset integration
+
+---
+
+## Author
+
+**Dhruv Sandilya**  
+Delhi Technological University  
+B.Tech Computer Science & Engineering
 
 ---
 
 ## Data Sources
+
 The model is built using 2024 US BNPL statistics from:
 
 * Federal Reserve (SHED Report 2024) — 15% U.S. adult adoption
@@ -36,162 +229,6 @@ The model is built using 2024 US BNPL statistics from:
 * Public filings from providers such as Affirm and Klarna
 * Motley Fool Money research — Default rates by credit category
 * CFPB risk distribution profiles
-
----
-
-## Core Financial Assumptions
-
-| Variable                     | Value   |
-| ---------------------------- | ------- |
-| Merchant Discount Rate (MDR) | 5%      |
-| Cost of Funds                | 9.5%    |
-| Loan Tenure                  | 6 weeks |
-| Loss Given Default (LGD)     | 75%     |
-| Fixed Cost per Loan          | $3      |
-
----
-
-## Core Hypothesis
-Contribution Margin (CM) remains positive only within a **specific ticket size band**, which varies by user segment.
-```
-CM(T) = T × MDR - CostOfFunds(T) - PD(T) × LGD × T - FixedCost
-```
-
-Where:
-* **At low ticket sizes** → Fixed cost dominates → CM negative
-* **At moderate ticket sizes** → CM increases
-* **At high ticket sizes** → Probability of Default increases non-linearly → Expected Credit Loss dominates → CM decreases, eventually turning negative
-
-Each segment therefore has:
-* A minimum viable ticket size
-* A peak profitability point
-* A maximum viable ticket size
-
----
-
-## Segmentation Framework
-Users are segmented across three dimensions:
-1. **Generation** (Gen Z, Millennial, Gen X, Baby Boomer)
-2. **Income Bracket** (<$50k, $50k-$100k, >$100k)
-3. **Credit Tier** (Deep Subprime → Super Prime)
-
-This produces **60 distinct user profiles** (4 × 3 × 5) enabling:
-* Segment-level ARPU calculation
-* Granular default rate modeling
-* Contribution margin analysis by profile
-* Portfolio-weighted profitability assessment
-
----
-
-## Dynamic Default Modeling
-Baseline probability of default (PD) is derived from credit tier data.
-
-To reflect real-world risk elasticity:
-* **PD(T) scales non-linearly** when ticket size increases beyond segment baseline
-* Risk sensitivity modeled as: `PD(T) = PD_base × (T / T_baseline)^β`
-* **Beta coefficients** vary by segment: β = 1.05 (Super Prime) to 1.89 (Deep Subprime)
-* Income stress and credit sensitivity amplify risk at higher exposures
-
-This dynamic modeling is critical to understanding margin fragility at scale.
-
----
-
-## Key Questions Addressed
-
-1. **Is BNPL structurally profitable?**
-   - Portfolio-level CM: $0.80/user — razor-thin margins
-   - 35% of loans are unprofitable
-   - Business is viable but fragile
-
-2. **Which segments drive value vs destroy it?**
-   - Gen Z low-income: -$33/user (9.8% of portfolio, 19.8% of loans)
-   - Gen X high-income: +$45/user (3% of portfolio, disproportionate profit)
-   - Middle-income Millennials: Sweet spot at $0.27-$4/user
-
-3. **What are optimal ticket size limits by segment?**
-   - Deep Subprime Gen Z: Never profitable (recommend decline)
-   - Middle-income Millennial (Prime): $99-$219 (peak at ~$140)
-   - High-income Gen X (Super Prime): No meaningful upper limit
-
----
-
-## Key Insights
-
-### 1. Structural Fragility
-* **Portfolio CM of $0.80/user** — 98% of revenue consumed by costs
-* **35% loan-level unprofitability** — requires cross-subsidization from profitable segments
-* **Concentration risk threshold: 23%** — Portfolio breaks if low-income share exceeds this
-
-### 2. Non-Linear Default Risk
-* Default probability scales with beta coefficients ranging **1.05 to 1.89**
-* High-risk segments (β = 1.89) see defaults grow **18x** at 4x ticket size
-* Low-risk segments (β = 1.05) remain stable even at 5x+ ticket size
-* **This non-linearity drives segment-specific breakeven points**
-
-### 3. Segment-Specific Profitability Windows
-
-| Segment | Min Viable ATS | Max Viable ATS | Peak CM ATS | Peak CM Value |
-|---------|----------------|----------------|-------------|---------------|
-| Gen Z, <$50k, Deep Sub | Never | Never | N/A | -$33/user |
-| Millennial, $50-100k, Prime | $99 | $219 | ~$140 | $0.72 |
-| Gen X, >$100k, Super Prime | Baseline | No limit | $800-1000 | $42+ |
-
-### 5. Industry-Level Implications
-* **Merchant value vs BNPL profitability trade-off:**
-  - Risky segments drive merchant GMV but destroy BNPL margins
-  - Stable segments generate BNPL profit but lower merchant conversion lift
-* **Competitive dynamics:** Race to the bottom on MDR compresses already-thin margins
-* **Macro sensitivity:** +100bps funding cost could render industry unprofitable
-* **Regulatory risk:** Default rate disclosure or fee caps could eliminate marginal segments
-
----
-
-## Broader Industry Conclusion
-BNPL is a **structurally thin-margin industry** characterized by:
-
-* High merchant bargaining power → MDR compression
-* Capital sensitivity → Funding cost vulnerability
-* Competitive pricing pressure → Limited differentiation
-* Riskier segments are value drivers for merchants while being margin deteriorators for BNPL providers
-* Stable segments are strategic buyers which provide lesser merchant value but drive BNPL profitability
-* **Profitability is highly fragile** as these competing value drivers are navigated
-
-Under mild macro stress (higher funding cost, deteriorating credit mix, or regulatory intervention), **industry-level profitability can turn negative**.
-
-**Strategic imperative:** Selective growth with dynamic, risk-based approval limits.
-
----
-
-## Model Features
-
-### Interactive Dashboard
-* **Dynamic user profile selection** across generation, income, credit tier
-* **Real-time contribution margin curves** showing profitability vs ticket size
-* **Scenario analysis** via adjustable MDR and funding rate parameters
-* **Portfolio statistics** including default rate, average CM, loan composition
-* **Optimization metrics** (min/max/peak profitable ticket sizes per segment)
-
-### Analytical Capabilities
-* 60-cell economic model with segment-specific parameters
-* Non-linear default probability functions with beta coefficients
-* Portfolio-weighted aggregation and sensitivity analysis
-* Revenue validation against industry benchmarks
-
----
-
-## Skills Demonstrated
-* **Financial modeling:** Unit economics, contribution margin analysis
-* **Credit risk modeling:** Expected credit loss, PD/LGD framework, non-linear risk scaling
-* **Data triangulation:** Multi-source integration (census, industry reports, public filings)
-* **Portfolio analysis:** Segmentation, concentration risk, mix sensitivity
-* **Strategic reasoning:** Growth prioritization, risk-based decision framework
-* **Data visualization:** Interactive dashboard design, scenario analysis interface
-* **Model validation:** Industry benchmarking, sanity checking
-
----
-
-## Dashboard Preview
-<img width="960" height="685" alt="BNPL Dashboard" src="https://github.com/user-attachments/assets/3f7b99bd-5789-478e-acf9-6a65c6d02036" />
 
 ---
 
@@ -211,24 +248,3 @@ Under mild macro stress (higher funding cost, deteriorating credit mix, or regul
    - Adjust MDR (Merchant Discount Rate) to model pricing changes
    - Adjust Funding Rate to assess capital cost sensitivity
    - Dashboard updates dynamically
-  
----
-
-## Future Enhancements
-* Add merchant GMV lift modeling to quantify merchant-side value
-* Incorporate seasonality effects on default rates
-* Model multi-installment plans (Pay-in-6, Pay-in-12)
-* Add Monte Carlo simulation for portfolio stress testing
-* Integrate with Python for automated scenario generation
-
----
-
-## Author
-**Dhruv Sandilya**  
-Delhi Technological University | B.Tech Computer Science & Engineering  
-dhruvsandilya1104@gmail.com
-
----
-
-## Acknowledgments
-Data sources include Federal Reserve, CFPB, PYMNTS, Equifax, and public filings from BNPL providers. This project was developed independently as part of a self-directed learning initiative in financial modeling and credit risk analysis.
