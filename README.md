@@ -197,7 +197,7 @@ The model suggests sustainability requires:
 
 ## Dashboard Preview
 
-<img width="960" height="684" alt="BNPL Unit Economics Dashboard" src="https://github.com/user-attachments/assets/5d6ff54b-4386-43e8-b6c1-96844fa002da" />
+<img width="960" height="684" alt="BNPL Unit Economics Dashboard" src="https://github.com/user-attachments/assets/d85efb2d-ca73-4d53-a804-a8628ff6835f" />
 
 ---
 
