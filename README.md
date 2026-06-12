@@ -9,7 +9,7 @@ A three-dashboard financial model analyzing the structural sustainability of Buy
 ## Dashboards
 
 ### Unit Economics & Portfolio Overview
-![BNPL Portfolio Overview](Visual/Portfolio%20Overview/BNPL%20Portfolio%20Overview%20Dashboard.png)
+![BNPL Portfolio Overview](Visual/Portfolio%20Overview/BNPL%20Portfolio%20Overview%20Dashboard.jpeg)
 
 ### Macro Stress Test
 ![Macro Stress Test](Visual/Macro%20Stress%20Test/Macro%20Stress%20Analysis%20Dashboard.png)
