@@ -1,4 +1,4 @@
-# BNPL Unit Economics & Portfolio Optimization
+# BNPL Unit Economics, Stress Testing & Portfolio Optimization
 
 A three-dashboard financial model analyzing the structural sustainability of Buy Now Pay Later (BNPL) unit economics across 60 borrower segments, with a constrained portfolio optimization engine built on top of the stress-tested results.
 
