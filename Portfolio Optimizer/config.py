@@ -2,7 +2,8 @@
 # Central configuration for the BNLP Portfolio Optimizer
 
 # ── File paths ────────────────────────────────────────────────────────────────
-WORKBOOK_PATH = "../Excel/BNPL Project.xlsx"
+import os
+WORKBOOK_PATH = os.path.join(os.path.dirname(__file__), "..", "Excel", "BNPL Project.xlsx")
 
 # ── Sheet names ───────────────────────────────────────────────────────────────
 STRESS_ANALYSIS_SHEET = "Stress Analysis"
