@@ -2,7 +2,7 @@
 # Central configuration for the BNLP Portfolio Optimizer
 
 # ── File paths ────────────────────────────────────────────────────────────────
-WORKBOOK_PATH = "BNPL Project.xlsx"
+WORKBOOK_PATH = "../Excel/BNPL Project.xlsx"
 
 # ── Sheet names ───────────────────────────────────────────────────────────────
 STRESS_ANALYSIS_SHEET = "Stress Analysis"
