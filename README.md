@@ -1,250 +1,143 @@
-# BNPL Unit Economics & Profitability Risk Model
+# BNPL Unit Economics & Portfolio Optimization
 
-A segment-level financial model analyzing the structural sustainability of Buy Now Pay Later (BNPL) unit economics under varying ticket sizes, credit tiers, demographic mix, funding costs, and Merchant Discount Rates (MDR).
+A three-dashboard financial model analyzing the structural sustainability of Buy Now Pay Later (BNPL) unit economics across 60 borrower segments, with a constrained portfolio optimization engine built on top of the stress-tested results.
 
-This project evaluates whether BNPL profitability is structurally sustainable — and if so, under what portfolio composition.
-
----
-
-## Objective
-
-To model how:
-* Ticket size elasticity
-* Credit risk concentration
-* Demographic mix
-* Funding cost sensitivity
-* Merchant pricing pressure
-
-interact to determine BNPL contribution margin at both segment and portfolio levels.
-
-The model identifies profitability breakpoints, optimal ticket sizes, and structural fragility thresholds.
+**[→ Live Portfolio Optimizer](https://bnpl-portfolio-optimizer.streamlit.app)**
 
 ---
 
-## Core Hypothesis
+## What This Project Found
 
-BNPL contribution margin is not monotonic in ticket size.
+### 1. The portfolio makes money despite itself
+Net contribution margin is 84.7% dependent on just 5 of 60 segments. The remaining 55 net to only $63M combined, with 17 actively destroying $335M in value that the top 5 must overcome. The headline $414M portfolio CM looks healthy. The composition doesn't.
 
-Revenue scales linearly with ticket size:
+### 2. The real binding constraint isn't credit risk — it's merchant structure
+BNPL lenders cannot cherry-pick borrowers because merchant SLAs require volume across their full customer base. Riskier segments drive merchant GMV but compress BNPL margins. The $335M of loss-making drag isn't sloppy underwriting — it's the implicit cost of maintaining the merchant relationships that generate the profitable book. Competitive MDR compression and funding cost volatility amplify this tension structurally.
+
+### 3. 86 basis points of MDR headroom in base — already underwater in adverse
+The base portfolio breaks even at 4.14% MDR, leaving 86bps of cushion at the current 5.0%. The adverse scenario operates at a reduced MDR of 4.75% but needs 5.05% to break even — it is already 30bps underwater at its current stressed rate. The severely adverse scenario is already 160bps underwater at its stressed 4.5% MDR. The stress scenarios compound both sides simultaneously: MDR falls from 5.0% to 4.5% while funding costs rise from 9.5% to 13.0%. In an industry where merchant fee negotiations routinely move 50–200bps, the adverse book sits one renegotiation from zero.
+
+### 4. Increasing ticket size cannot rescue Deep Subprime — but it nearly triples CM for Sub Prime
+For Millennial / $50K–100K / Sub Prime, doubling the current $130 ATS almost triples CM/loan, with a profitable window between $104 and $378. Deep Subprime has no such window — its CM curve never turns positive at any ticket size, starting negative and accelerating downward regardless of loan size. The combined beta for the worst segment (Deep Subprime / <$50K) reaches 1.89, meaning default rates grow nearly twice as fast as ticket size. ECL always outpaces revenue before breakeven is reached.
+
+### 5. A 6.3% portfolio reallocation turns a $158M stressed loss into positive CM
+Touching just 1 in 16 loans, the constrained optimizer flips adverse CM from −$158M to +$0.9M, improves base CM by 52% ($414M → $630M), cuts adverse PD by 33bps, and grows GMV by $5.4B. Each additional percentage point of turnover budget in this range is worth ~$13M of adverse CM.
+
+---
+
+## Project Structure
+
 ```
-R(T) = T × MDR
+BNPL-Unit-Economics-Model/
+├── Excel/
+│   └── BNPL Project.xlsx          # Three-dashboard Excel model
+├── Portfolio Optimizer/
+│   ├── app.py                     # Streamlit dashboard
+│   ├── optimizer.py               # LP engine (scipy HiGHS)
+│   ├── portfolio.py               # Portfolio metric calculations
+│   ├── data_loader.py             # Excel → Python pipeline
+│   ├── ui_helpers.py              # Formatters and chart builders
+│   ├── frontier.py                # Efficient frontier generation
+│   └── config.py                  # Constants and file paths
+└── requirements.txt
 ```
 
-But expected credit loss scales non-linearly:
-```
-PD(T) = PD_base × (T / T_baseline)^β
-```
+---
 
-Therefore:
-```
-CM(T) = T × MDR − FundingCost(T) − PD(T) × LGD × T − FixedCost
-```
+## Three Dashboards
 
-This produces segment-specific profitability bands:
-* Minimum viable ticket size
-* Peak contribution margin
-* Maximum viable ticket size
+### 1. BNPL Unit Economics (Excel)
+Segment-level contribution margin analysis across 60 profiles. Interactive dropdowns for generation, income bracket, and credit tier. Real-time CM vs ticket size curve with automatic detection of min/peak/max profitable ATS. Adjustable MDR and funding rate stress testing.
 
-Beyond a threshold, convex credit losses dominate linear revenue growth.
+### 2. Macro Stress Test (Excel)
+Portfolio-level P&L under Base, Adverse, and Severely Adverse macro scenarios. Each scenario applies independent multipliers to PD, EAD, ATS, and loan count at the credit tier, generation, and income bracket level simultaneously. Breakeven MDR and profitable segment count tracked across all three scenarios.
+
+### 3. Portfolio Optimizer (Python / Streamlit)
+Constrained LP optimization across all 60 segments using `scipy.optimize.linprog` with HiGHS.
+
+**Objective:** Maximize `0.5 × Base CM + 0.3 × Adverse CM + 0.2 × Severe CM`
+
+**Constraints:**
+- Per-segment relative delta (RD): each segment weight can move at most ±RD% of its current allocation
+- Global turnover budget (TO): `0.5 × Σ|wᵢ − wᵢ_cur| ≤ budget`, linearized via auxiliary variables
+- Adverse PD cap: maximum weighted probability of default under stress
+- GMV retention floor: minimum base-scenario GMV
+
+**Operating Region Analysis:** 25-cell RD × TO grid showing how adverse CM, severe CM, PD, and credit tier composition shift across the full constraint space.
 
 ---
 
 ## Segmentation Framework
 
-The portfolio is modeled across **60 user profiles**:
+**60 segments: 4 Generations × 3 Income Brackets × 5 Credit Tiers**
 
-**4 Generations × 3 Income Brackets × 5 Credit Tiers**
+| Dimension | Values |
+|---|---|
+| Generation | Gen Z, Millennial, Gen X, Baby Boomer |
+| Income Bracket | <$50K, $50K–$100K, >$100K |
+| Credit Tier | Deep Subprime, Sub Prime, Near Prime, Prime, Super Prime |
 
-Each segment includes:
-* Baseline probability of default
-* Average ticket size
-* Beta coefficient (risk elasticity)
-* Expected credit loss
-* Segment-level contribution margin
-
-This enables both:
-* Micro (user-level) economics
-* Macro (portfolio-level) aggregation
+Each segment carries scenario-specific values for loan count, ATS, revenue per loan, ECL, funding cost, CM per loan, and PD across all three macro scenarios.
 
 ---
 
-## Core Financial Assumptions
+## Model Architecture
 
-| Variable | Value |
-|----------|-------|
-| Merchant Discount Rate (MDR) | 5% |
-| Funding Rate | 9.5% |
-| Loss Given Default (LGD) | 75% |
-| Fixed Cost per Loan | $3 |
-| Loan Tenure | 6 weeks |
+**PD is dynamic.** Segment-level default rates scale non-linearly with ticket size via a multiplicative beta:
 
-MDR and Funding Rate are adjustable within the dashboard.
+```
+PD(T) = PD₀ × (T / T_baseline)^β
+β = Beta_Income × Beta_Credit_Tier
+```
 
----
+Beta ranges from **1.071** (Super Prime / >$100K) to **1.890** (Deep Subprime / <$50K). At β = 1.89, a 4× increase in ticket size produces an 18× increase in default rate.
 
-## Key Findings
+**Macro stress applies three independent multipliers per metric:**
 
-### 1. Structural Fragility
+```
+Stressed PD = Base PD × Credit_Tier_Mult × Generation_Mult × Income_Mult
+Stressed ATS = Base ATS × Generation_Mult × Income_Mult
+Stressed Loan Count = Base LC × Generation_Mult × Income_Mult
+```
 
-* Portfolio contribution margin: **$0.80 per loan**
-* CM implies that ~98% of revenue is absorbed by funding, credit losses, and operating costs.
-* ±50bps shock (funding up + MDR down) turns portfolio CM negative
-* The industry operates with thin buffers and high macro sensitivity.
+**EAD varies by credit tier**, reflecting how much of the loan is outstanding at default based on repayment timing distributions. Higher credit tiers have lower EAD because borrowers repay more before defaulting.
 
-High merchant bargaining power and capital dependence structurally compress margins.
-
-### 2. The Profitability Paradox
-
-* **35% of loans profitable**
-* **65% of loans loss-making**
-
-The loss-making majority likely drives incremental merchant GMV, justifying MDR levels.
-
-The profitable minority preserves BNPL viability but may generate less incremental merchant value.
-
-This creates structural cross-subsidization within the portfolio.
-
-**BNPL's sustainability depends on balancing these opposing forces.**
-
-### 3. Non-Linear Risk Drives Breakpoints
-
-Beta coefficients range from **1.05 (Super Prime) to 1.89 (Deep Subprime)**.
-Beta coefficients for Income Brackets range from **1.05 (>100k) to 1.4 (<50k)**.
-
-High-risk segments (β = 1.89) see defaults grow **18x** at 4x ticket size
-* Low-risk segments (β = 1.05) remain stable even at 5x+ ticket size
-* **This non-linearity drives segment-specific breakeven points**
-
-### 4. Segment-Specific Profitability Windows
-
-| Segment | Min ATS | Optimal ATS | Max ATS |
-|---------|---------|-------------|---------|
-| Gen Z, <$50k, Deep Subprime | Never profitable | N/A | N/A |
-| Millennial, $50–100k, Near Prime | $114 | $294 | $457 |
-| Gen X, >$100k, Prime | $148 | $2,068 | $4,062 |
-
-Millennial Near Prime shows a **160%+ gap between average and optimal ticket size** — indicating controlled underwriting expansion potential.
-
-### 5. Concentration Risk
-
-* **45% of originations originate from Deep Subprime**
-* Structurally unprofitable across ticket sizes
-* Portfolio viability is highly sensitive to mix shifts.
-
-A deterioration in low-income concentration beyond **~23%** renders the portfolio unprofitable.
-
-**Portfolio mix is the primary strategic lever.**
-
-### 6. Industry-Level Tension
-
-BNPL operates in a structurally fragile equilibrium:
-
-**Merchant Value Drivers ≠ BNPL Profit Drivers**
-
-* Riskier segments drive merchant GMV uplift but compress BNPL margins
-* Stable segments generate BNPL profit but may add less incremental merchant value
-
-Competitive MDR compression and funding cost volatility amplify this tension.
-
-### 7. Portfolio Mix is the Primary Control Variable
-
-While ticket size optimization improves segment economics, long-term sustainability is primarily driven by demographic and credit mix composition.
-
-**Growth quality matters more than growth volume**.
+| Credit Tier | EAD Factor | LGD |
+|---|---|---|
+| Deep Subprime | 0.638 | 1.0 |
+| Sub Prime | 0.563 | 1.0 |
+| Near Prime | 0.518 | 1.0 |
+| Prime | 0.488 | 1.0 |
+| Super Prime | 0.443 | 1.0 |
 
 ---
 
-## Strategic Implications
+## Scenario Assumptions
 
-The model suggests sustainability requires:
-
-* Gradual expansion of Near Prime segments
-* Controlled reduction in Deep Subprime concentration
-* Segment-specific ticket optimization
-* Revenue diversification beyond MDR-only monetization
-
-**BNPL is not structurally doomed — but is highly sensitive to pricing, mix, and funding conditions.**
-
----
-
-## Model Features
-
-### Interactive Dashboard:
-* Dynamic segment selection
-* Real-time CM vs ticket size visualization
-* Automatic detection of min/peak/max profitable ATS
-* Adjustable MDR and funding rate stress testing
-* Portfolio-level aggregation metrics
-
-### Analytical Engine:
-* 60-segment economic model
-* Non-linear PD elasticity
-* Portfolio-weighted aggregation
-* Stress threshold detection
-
----
-
-## What This Project Demonstrates
-
-* Unit economics modeling
-* Credit risk convexity analysis
-* Portfolio concentration risk assessment
-* Scenario-based stress testing
-* Translation of micro-level risk into macro-level strategic implications
-* Advanced Excel financial modeling architecture
-
----
-
-## Dashboard Preview
-
-![BNPL Unit Economics Dashboard](https://github.com/user-attachments/assets/6d818430-54f6-4e9d-af06-eeedd8fa7bb3)
-
----
-
-## Future Enhancements
-
-* Merchant GMV lift quantification
-* Monte Carlo stress simulation
-* Multi-tenure product modeling
-* Python-based scenario automation
-* Real-world dataset integration
-
----
-
-## Author
-
-**Dhruv Sandilya**  
-Delhi Technological University  
-B.Tech Computer Science & Engineering
+| Variable | Base | Adverse | Severely Adverse |
+|---|---|---|---|
+| MDR | 5.00% | 4.75% | 4.50% |
+| Funding Rate | 9.50% | 11.25% | 13.00% |
+| LGD | 100% | 100% | 100% |
+| Fixed Cost per Loan | $3 | $3 | $3 |
+| Loan Tenure | 6 weeks | 6 weeks | 6 weeks |
+| Breakeven MDR | 4.14% | 5.05% | 6.10% |
+| MDR Cushion / Deficit | +86 bps | −30 bps | −160 bps |
 
 ---
 
 ## Data Sources
 
-The model is built using 2024 US BNPL statistics from:
+Built from 2024 US BNPL market statistics:
 
-* Federal Reserve (SHED Report 2024) — 15% U.S. adult adoption
-* CFPB BNPL Market Report — 335.8M loans, ~1.82–1.83% default rate
-* PYMNTS & Equifax (2024) — Adoption by generation & income
-* Public filings from providers such as Affirm and Klarna
-* Motley Fool Money research — Default rates by credit category
-* CFPB risk distribution profiles
+- **CFPB BNPL Market Report** — 335.8M loans, ~1.82% baseline default rate, origination distribution
+- **Federal Reserve SHED Report 2024** — 15% U.S. adult adoption, income bracket distributions
+- **PYMNTS & Equifax 2024** — Adoption rates by generation and income
+- **Affirm & Klarna public filings** — Unit economics benchmarks, funding cost references
+- **Motley Fool Money / credit bureau data** — Default rates by credit category
 
 ---
 
-## How to Use
+## Author
 
-1. **Download** the Excel file from this repository
-3. **Navigate to "Dashboard" tab**
-4. **Select user profile** using dropdowns:
-   - Generation (Gen Z, Millennial, Gen X, Baby Boomer)
-   - Income Bracket (<$50k, $50k-$100k, >$100k)
-   - Credit Category (Deep Subprime → Super Prime)
-5. **View results:**
-   - Contribution margin curve shows profitability across ticket size range
-   - Metrics panel displays segment-specific statistics
-   - Optimization thresholds show min/max/peak profitable ticket sizes
-6. **Run scenarios:**
-   - Adjust MDR (Merchant Discount Rate) to model pricing changes
-   - Adjust Funding Rate to assess capital cost sensitivity
-   - Dashboard updates dynamically
+**Dhruv Sandilya** — Delhi Technological University, B.Tech Computer Science & Engineering
