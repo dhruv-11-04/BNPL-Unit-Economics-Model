@@ -96,24 +96,25 @@ Each segment carries scenario-specific values for loan count, ATS, revenue per l
 
 ## Model Architecture
 
-**PD is dynamic.** Segment-level default rates scale non-linearly with ticket size via a multiplicative beta:
+The model computes contribution margin for each of the 60 segments using a bottom-up unit economics formula:
+
+```
+CM per loan = Revenue − ECL − Funding Cost − Fixed Cost
+            = (MDR × ATS) − (PD × EAD × ATS) − (Funding Rate × ATS × Tenure) − $3
+```
+
+Every term scales with ticket size (ATS), which means profitability is non-linear — revenue grows linearly while credit losses grow faster for riskier segments due to the beta structure described below.
+
+**Probability of Default is dynamic, not static.** PD scales non-linearly with ticket size via a multiplicative beta:
 
 ```
 PD(T) = PD₀ × (T / T_baseline)^β
 β = Beta_Income × Beta_Credit_Tier
 ```
 
-Beta ranges from **1.071** (Super Prime / >$100K) to **1.890** (Deep Subprime / <$50K). At β = 1.89, a 4× increase in ticket size produces an 18× increase in default rate.
+Beta ranges from **1.071** (Super Prime / >$100K) to **1.890** (Deep Subprime / <$50K). At β = 1.89, a 4× increase in ticket size produces an 18× increase in default rate — which is why no ticket size rescues Deep Subprime.
 
-**Macro stress applies three independent multipliers per metric:**
-
-```
-Stressed PD = Base PD × Credit_Tier_Mult × Generation_Mult × Income_Mult
-Stressed ATS = Base ATS × Generation_Mult × Income_Mult
-Stressed Loan Count = Base LC × Generation_Mult × Income_Mult
-```
-
-**EAD varies by credit tier**, reflecting how much of the loan is outstanding at default based on repayment timing distributions. Higher credit tiers have lower EAD because borrowers repay more before defaulting.
+**EAD varies by credit tier**, capturing how much of the loan is outstanding at the point of default based on repayment timing distributions. Higher credit tiers repay more before defaulting, reducing exposure.
 
 | Credit Tier | EAD Factor | LGD |
 |---|---|---|
@@ -123,6 +124,23 @@ Stressed Loan Count = Base LC × Generation_Mult × Income_Mult
 | Prime | 0.488 | 1.0 |
 | Super Prime | 0.443 | 1.0 |
 
+**Macro stress applies three independent multipliers per metric**, compounding across credit tier, generation, and income bracket simultaneously:
+
+```
+Stressed PD         = Base PD  × Credit_Tier_Mult × Generation_Mult × Income_Mult
+Stressed ATS        = Base ATS × Generation_Mult  × Income_Mult
+Stressed Loan Count = Base LC  × Generation_Mult  × Income_Mult
+```
+
+Stressed ECL then uses the stressed PD, stressed ATS, and a scenario-specific EAD multiplier — meaning credit deterioration, ticket size compression, and exposure expansion all hit simultaneously in the adverse and severe scenarios.
+
+**The optimizer maximizes a scenario-weighted objective** across all 60 segment weights:
+
+```
+Maximize: 0.5 × Base CM + 0.3 × Adverse CM + 0.2 × Severe CM
+```
+
+Subject to six constraints: weights sum to 1, per-segment weight bounds, adverse PD cap, GMV retention floor, per-segment relative delta limit, and a global turnover budget. The turnover constraint is linearized via auxiliary variables `p` and `q` such that `wᵢ − wᵢ_cur = pᵢ − qᵢ`, converting the absolute value into a linear program solvable by HiGHS.
 ---
 
 ## Scenario Assumptions
