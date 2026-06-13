@@ -38,25 +38,6 @@ Touching just 1 in 16 loans, the constrained optimizer flips adverse CM from −
 
 ---
 
-## Project Structure
-
-```
-BNPL-Unit-Economics-Model/
-├── Excel/
-│   └── BNPL Project.xlsx          # Three-dashboard Excel model
-├── Portfolio Optimizer/
-│   ├── app.py                     # Streamlit dashboard
-│   ├── optimizer.py               # LP engine (scipy HiGHS)
-│   ├── portfolio.py               # Portfolio metric calculations
-│   ├── data_loader.py             # Excel → Python pipeline
-│   ├── ui_helpers.py              # Formatters and chart builders
-│   ├── frontier.py                # Efficient frontier generation
-│   └── config.py                  # Constants and file paths
-└── requirements.txt
-```
-
----
-
 ## Three Dashboards
 
 ### 1. BNPL Unit Economics (Excel)
@@ -77,6 +58,25 @@ Constrained LP optimization across all 60 segments using `scipy.optimize.linprog
 - GMV retention floor: minimum base-scenario GMV
 
 **Operating Region Analysis:** 25-cell RD × TO grid showing how adverse CM, severe CM, PD, and credit tier composition shift across the full constraint space.
+
+---
+
+## Project Structure
+
+```
+BNPL-Unit-Economics-Model/
+├── Excel/
+│   └── BNPL Project.xlsx          # Three-dashboard Excel model
+├── Portfolio Optimizer/
+│   ├── app.py                     # Streamlit dashboard
+│   ├── optimizer.py               # LP engine (scipy HiGHS)
+│   ├── portfolio.py               # Portfolio metric calculations
+│   ├── data_loader.py             # Excel → Python pipeline
+│   ├── ui_helpers.py              # Formatters and chart builders
+│   ├── frontier.py                # Efficient frontier generation
+│   └── config.py                  # Constants and file paths
+└── requirements.txt
+```
 
 ---
 
