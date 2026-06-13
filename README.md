@@ -6,19 +6,6 @@ A three-dashboard financial model analyzing the structural sustainability of Buy
 
 ---
 
-## Dashboards
-
-### Unit Economics & Portfolio Overview
-![BNPL Portfolio Overview](Visual/Portfolio%20Overview/BNPL%20Portfolio%20Overview%20Dashboard.jpeg)
-
-### Macro Stress Test
-![Macro Stress Test](Visual/Macro%20Stress%20Test/Macro%20Stress%20Analysis%20Dashboard.png)
-
-### Portfolio Optimizer
-![Portfolio Optimizer](Visual/Portfolio%20Optimizer/Optimizer%20Result.png)
-
----
-
 ## What This Project Found
 
 ### 1. The portfolio makes money despite itself
@@ -35,6 +22,19 @@ For Millennial / $50K–100K / Sub Prime, doubling the current $130 ATS almost t
 
 ### 5. A 6.3% portfolio reallocation turns a $158M stressed loss into positive CM
 Touching just 1 in 16 loans, the constrained optimizer flips adverse CM from −$158M to +$0.9M, improves base CM by 52% ($414M → $630M), cuts adverse PD by 33bps, and grows GMV by $5.4B. Each additional percentage point of turnover budget in this range is worth ~$13M of adverse CM.
+
+---
+
+## Dashboards
+
+### Unit Economics & Portfolio Overview
+![BNPL Portfolio Overview](Visual/Portfolio%20Overview/BNPL%20Portfolio%20Overview%20Dashboard.jpeg)
+
+### Macro Stress Test
+![Macro Stress Test](Visual/Macro%20Stress%20Test/Macro%20Stress%20Analysis%20Dashboard.png)
+
+### Portfolio Optimizer
+![Portfolio Optimizer](Visual/Portfolio%20Optimizer/Optimizer%20Result.png)
 
 ---
 
